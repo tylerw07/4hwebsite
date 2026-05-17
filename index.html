@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4-H Club Money Tracker Project</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f4f4f4; color: #222; }
+
+  /* ── Tab Nav ── */
+  .tab-nav {
+    display: flex;
+    background: #085041;
+    padding: 0 1rem;
+  }
+  .tab-btn {
+    padding: 1rem 1.4rem;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.65);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn:hover { color: white; }
+  .tab-btn.active { color: white; border-bottom-color: #5DD6A8; }
+
+  /* ── Tab Panels ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Tab 1: Description ── */
+  .desc-header {
+    background: #085041;
+    color: white;
+    padding: 2.5rem 2rem 2rem;
+    text-align: center;
+  }
+  .desc-header h1 { font-size: 2rem; margin-bottom: 0.4rem; }
+  .desc-header p { opacity: 0.75; font-size: 1rem; }
+  .desc-body { max-width: 750px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .desc-body h2 { font-size: 1.1rem; color: #085041; margin: 1.5rem 0 0.5rem; border-left: 4px solid #085041; padding-left: 0.6rem; }
+  .desc-body p, .desc-body li { font-size: 0.97rem; line-height: 1.7; color: #333; }
+  .desc-body ul { padding-left: 1.4rem; margin-top: 0.3rem; }
+  .desc-body li { margin-bottom: 0.3rem; }
+  .badge-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 1rem; }
+  .badge { background: #e6f5f0; color: #085041; font-size: 0.8rem; font-weight: 600; padding: 4px 12px; border-radius: 99px; border: 1px solid #b0ddd0; }
+
+  /* ── Tab 2: Bare Bones ── */
+  #panel-bare { background: white; padding: 1.5rem; }
+  #panel-bare h1 { font-size: 1.4rem; margin-bottom: 1rem; }
+
+  /* ── Tab 3: Styled Tracker ── */
+  #panel-styled { background: white; }
+
+  /* styled tracker inner styles scoped with prefix .st- */
+  .st-header { background: #085041; color: white; padding: 1.25rem 1.5rem; }
+  .st-header h1 { font-size: 1.5rem; }
+  .st-container { max-width: 600px; margin: 0 auto; padding: 1.25rem; }
+  .st-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .st-card { text-align: center; padding: 0.75rem 0; border-bottom: 2px solid #eee; }
+  .st-card .st-label { font-size: 0.75rem; color: #777; text-transform: uppercase; margin-bottom: 4px; }
+  .st-card .st-value { font-size: 1.4rem; font-weight: 700; }
+  .st-green { color: #1D9E75; }
+  .st-red { color: #E24B4A; }
+  .st-panel { margin-bottom: 1.5rem; }
+  .st-panel h2 { font-size: 1rem; margin-bottom: 0.75rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+  .st-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .st-label-text { display: block; font-size: 0.75rem; color: #777; margin-bottom: 3px; }
+  .st-input, .st-select { width: 100%; padding: 0.5rem 0.6rem; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem; background: #f9f9f9; font-family: sans-serif; }
+  .st-input:focus, .st-select:focus { outline: none; border-color: #1D9E75; }
+  .st-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .st-btn { padding: 0.55rem; border: none; border-radius: 5px; font-size: 0.9rem; font-weight: 600; cursor: pointer; font-family: sans-serif; }
+  .st-btn-add { background: #1D9E75; color: white; }
+  .st-btn-clear { background: #eee; color: #888; }
+  .st-btn:hover { opacity: 0.85; }
+  .st-tx { display: flex; align-items: center; gap: 10px; padding: 0.6rem 0; border-bottom: 1px solid #eee; }
+  .st-tx:last-child { border-bottom: none; }
+  .st-tx-info { flex: 1; }
+  .st-tx-desc { font-size: 0.9rem; font-weight: 500; }
+  .st-tx-date { font-size: 0.75rem; color: #999; }
+  .st-tx-amt { font-weight: 700; font-size: 0.95rem; }
+  .st-tx-del { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1rem; padding: 0 4px; }
+  .st-tx-del:hover { color: #E24B4A; }
+  .st-empty { text-align: center; color: #aaa; padding: 1.5rem 0; font-size: 0.9rem; }
+  .st-tip { border-left: 3px solid #f0b429; padding: 0.6rem 0.85rem; font-size: 0.85rem; color: #7a5a00; margin-bottom: 1rem; }
+
+  /* ── Tab 4: Slides ── */
+  #panel-slides { background: #111; min-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; }
+  #panel-slides h2 { color: white; margin-bottom: 1rem; font-size: 1.1rem; opacity: 0.7; }
+  #panel-slides iframe { width: 100%; max-width: 960px; height: 569px; border: none; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<!-- Tab Navigation -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="showTab('desc', this)">Project Description</button>
+  <button class="tab-btn" onclick="showTab('bare', this)">Bare Bones Tracker</button>
+  <button class="tab-btn" onclick="showTab('styled', this)">Styled Tracker</button>
+  <button class="tab-btn" onclick="showTab('slides', this)">Presentation</button>
+</nav>
+
+<!-- ── Tab 1: Project Description ── -->
+<div id="panel-desc" class="tab-panel active">
+  <div class="desc-header">
+    <h1>4-H Club Money Tracker</h1>
+    <p>A Simple Budget Tracker for 4-H Clubs — Computer Science Project</p>
+  </div>
+  <div class="desc-body">
+    <h2>Project Overview</h2>
+    <p>I created a 4-H Club Money Tracker using HTML, CSS, and JavaScript. This tool is designed to help 4-H clubs and their treasurer track income and expenses in a simple, easy-to-use web page that anyone can open in a browser.</p>
+
+    <h2>Features</h2>
+    <ul>
+      <li><strong>Track Income & Expenses</strong> — Log money coming in and going out with a few simple clicks</li>
+      <li><strong>Live Balance</strong> — The balance updates automatically every time you add a transaction</li>
+      <li><strong>Income & Expense Types</strong> — Switch between Income and Expense via a dropdown</li>
+      <li><strong>Savings Tip</strong> — A tip encourages staying above the 20% savings goal</li>
+      <li><strong>Color Coded</strong> — Income is shown in green, expenses in red</li>
+    </ul>
+
+    <h2>AI Assistance</h2>
+    <p>In addition to this project, I took on the task of making my code more appealing and easier to understand. To achieve this, I enlisted the help of Claude AI to upgrade my existing code, specifically focusing on enhancing its user-friendliness.</p>
+
+    <h2>AI Upgrades</h2>
+    <ul>
+      <li><strong>Overall Look</strong> — Visually upgraded the web app</li>
+      <li><strong>Savings Tip</strong> — Provides a savings tip encouraging staying above the 20% goal</li>
+      <li><strong>Color Code</strong> — Color coded income as green and expenses as red</li>
+    </ul>
+
+    <h2>Technologies Used</h2>
+    <div class="badge-row">
+      <span class="badge">HTML</span>
+      <span class="badge">CSS</span>
+      <span class="badge">JavaScript</span>
+      <span class="badge">Local Storage</span>
+      <span class="badge">Claude AI</span>
+    </div>
+
+    <h2>Sources</h2>
+    <ul>
+      <li>Coddy.tech</li>
+      <li>YouTube</li>
+      <li>Claude AI</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ── Tab 2: Bare Bones Tracker ── -->
+<div id="panel-bare" class="tab-panel">
+  <h1>4-H Club Money Tracker</h1>
+
+  <p>Income: <span id="b-income">$0.00</span> &nbsp;
+     Expenses: <span id="b-expense">$0.00</span> &nbsp;
+     Balance: <span id="b-balance">$0.00</span></p>
+
+  <h2>Add Transaction</h2>
+
+  <label>Type:
+    <select id="b-type" onchange="bUpdateLabel()">
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </select>
+  </label><br><br>
+
+  <label id="b-desc-label">4-Her Name:</label>
+  <input id="b-desc" type="text"><br><br>
+
+  <label>Amount: $</label>
+  <input id="b-amt" type="number" min="0" step="0.01"><br><br>
+
+  <button onclick="bAdd()">Add Transaction</button>
+  <button onclick="bClearAll()">Clear All</button>
+
+  <h2>Transactions</h2>
+  <div id="b-list">No transactions yet.</div>
+</div>
+
+<!-- ── Tab 3: Styled Tracker ── -->
+<div id="panel-styled" class="tab-panel">
+  <div class="st-header">
+    <h1>4-H Club Money Tracker</h1>
+  </div>
+  <div class="st-container">
+    <div class="st-cards">
+      <div class="st-card">
+        <div class="st-label">Income</div>
+        <div class="st-value st-green" id="s-income">$0.00</div>
+      </div>
+      <div class="st-card">
+        <div class="st-label">Expenses</div>
+        <div class="st-value st-red" id="s-expense">$0.00</div>
+      </div>
+      <div class="st-card">
+        <div class="st-label">Balance</div>
+        <div class="st-value" id="s-balance">$0.00</div>
+      </div>
+    </div>
+
+    <div class="st-tip" id="s-tip" style="display:none"></div>
+
+    <div class="st-panel">
+      <h2>Add Transaction</h2>
+      <div style="text-align:center; margin-bottom:8px;">
+        <span class="st-label-text">Type</span>
+        <select id="s-type" class="st-select" style="text-align:center;" onchange="sUpdateLabel()">
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+      <div class="st-form-grid" style="text-align:center;">
+        <div>
+          <span class="st-label-text" id="s-desc-label">4-Her Name</span>
+          <input id="s-desc" type="text" class="st-input" style="text-align:center;">
+        </div>
+        <div>
+          <span class="st-label-text">Amount</span>
+          <input id="s-amt" type="number" min="0" step="0.01" class="st-input" style="text-align:center;">
+        </div>
+      </div>
+      <div class="st-btn-row">
+        <button class="st-btn st-btn-add" onclick="sAdd()">+ Add Transaction</button>
+        <button class="st-btn st-btn-clear" onclick="sClearAll()">Clear All</button>
+      </div>
+    </div>
+
+    <div class="st-panel">
+      <h2>Transactions</h2>
+      <div id="s-list"><div class="st-empty">No transactions yet.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Tab 4: Presentation ── -->
+<div id="panel-slides" class="tab-panel">
+  <h2>4-H Club Money Tracker — Full Presentation</h2>
+  <iframe src="https://docs.google.com/presentation/d/10n9fgcuLCpcQed-qlB7yM5zQn3Taq5MRunQiim9lf64/embed?start=false&loop=false&delayms=3000" allowfullscreen></iframe>
+</div>
+
+<script>
+  // ── Tab switching ──
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Preset transactions ──
+  const PRESET = [
+    { id: 2, desc: '4-H', amt: 25, type: 'expense', date: 'May 17' },
+    { id: 1, desc: 'Rocks!', amt: 100, type: 'income', date: 'May 17' }
+  ];
+
+  // ══════════════════════════════
+  //  BARE BONES TRACKER
+  // ══════════════════════════════
+  let bTxs = JSON.parse(JSON.stringify(PRESET));
+
+  function bUpdateLabel() {
+    const type = document.getElementById('b-type').value;
+    document.getElementById('b-desc-label').textContent = type === 'income' ? '4-Her Name:' : 'Description:';
+  }
+
+  function bFmt(n) { return '$' + Math.abs(n).toFixed(2); }
+
+  function bAdd() {
+    const desc = document.getElementById('b-desc').value.trim();
+    const amt = parseFloat(document.getElementById('b-amt').value);
+    const type = document.getElementById('b-type').value;
+    if (!desc || !amt || amt <= 0) { alert('Please fill in all fields with a valid amount.'); return; }
+    bTxs.unshift({ id: Date.now(), desc, amt, type, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}) });
+    document.getElementById('b-desc').value = '';
+    document.getElementById('b-amt').value = '';
+    bRender();
+  }
+
+  function bDel(id) { bTxs = bTxs.filter(t => t.id !== id); bRender(); }
+
+  function bClearAll() {
+    if (confirm('Clear all transactions?')) { bTxs = []; bRender(); }
+  }
+
+  function bRender() {
+    const income = bTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amt, 0);
+    const expense = bTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amt, 0);
+    const bal = income - expense;
+    document.getElementById('b-income').textContent = bFmt(income);
+    document.getElementById('b-expense').textContent = bFmt(expense);
+    document.getElementById('b-balance').textContent = (bal < 0 ? '-' : '') + bFmt(bal);
+    const list = document.getElementById('b-list');
+    if (bTxs.length === 0) { list.innerHTML = 'No transactions yet.'; return; }
+    list.innerHTML = bTxs.map(t =>
+      `${t.date} | ${t.desc} | ${t.type === 'income' ? '+' : '-'}${bFmt(t.amt)} <button onclick="bDel(${t.id})">Delete</button><br>`
+    ).join('');
+  }
+
+  // ══════════════════════════════
+  //  STYLED TRACKER
+  // ══════════════════════════════
+  let sTxs = JSON.parse(JSON.stringify(PRESET));
+
+  function sUpdateLabel() {
+    const type = document.getElementById('s-type').value;
+    document.getElementById('s-desc-label').textContent = type === 'income' ? '4-Her Name' : 'Description';
+  }
+
+  function sFmt(n) { return '$' + Math.abs(n).toFixed(2); }
+
+  function sAdd() {
+    const desc = document.getElementById('s-desc').value.trim();
+    const amt = parseFloat(document.getElementById('s-amt').value);
+    const type = document.getElementById('s-type').value;
+    if (!desc || !amt || amt <= 0) { alert('Please fill in description and a valid amount.'); return; }
+    sTxs.unshift({ id: Date.now(), desc, amt, type, date: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}) });
+    document.getElementById('s-desc').value = '';
+    document.getElementById('s-amt').value = '';
+    sRender();
+  }
+
+  function sDel(id) { sTxs = sTxs.filter(t => t.id !== id); sRender(); }
+
+  function sClearAll() {
+    if (confirm('Clear all transactions?')) { sTxs = []; sRender(); }
+  }
+
+  function sRender() {
+    const income = sTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amt, 0);
+    const expense = sTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amt, 0);
+    const bal = income - expense;
+
+    document.getElementById('s-income').textContent = sFmt(income);
+    document.getElementById('s-expense').textContent = sFmt(expense);
+    const balEl = document.getElementById('s-balance');
+    balEl.textContent = (bal < 0 ? '-' : '') + sFmt(bal);
+    balEl.className = 'st-value ' + (bal < 0 ? 'st-red' : bal > 0 ? 'st-green' : '');
+
+    const tip = document.getElementById('s-tip');
+    if (sTxs.length === 0) { tip.style.display = 'none'; }
+    else if (income === 0) { tip.style.display = 'block'; tip.textContent = "Add your income to see how much you're saving."; }
+    else {
+      const pct = Math.round(((income - expense) / income) * 100);
+      tip.style.display = 'block';
+      tip.textContent = pct >= 20 ? `You're saving ${pct}% of your income — above the 20% goal!`
+        : pct > 0 ? `You're saving ${pct}%. Try to reach 20%!`
+        : `You're spending more than you earn. Time to cut back!`;
+    }
+
+    const list = document.getElementById('s-list');
+    if (sTxs.length === 0) { list.innerHTML = '<div class="st-empty">No transactions yet.</div>'; return; }
+    list.innerHTML = sTxs.map(t => `
+      <div class="st-tx">
+        <div class="st-tx-info">
+          <div class="st-tx-desc">${t.desc}</div>
+          <div class="st-tx-date">${t.date}</div>
+        </div>
+        <div class="st-tx-amt ${t.type === 'income' ? 'st-green' : 'st-red'}">${t.type === 'income' ? '+' : '−'}${sFmt(t.amt)}</div>
+        <button class="st-tx-del" onclick="sDel(${t.id})">x</button>
+      </div>
+    `).join('');
+  }
+
+  // Init both trackers
+  bRender();
+  sRender();
+</script>
+</body>
+</html>
